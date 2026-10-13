@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Portal Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; padding: 30px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { color: #1e293b; font-size: 26px; }
+        header p { color: #64748b; font-size: 14px; margin-top: 5px; }
+        
+        .form-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .form-box input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .form-box button { background: #4f46e5; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .form-box button:hover { background: #4338ca; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card-title { font-size: 18px; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
+        .card-company { font-size: 14px; color: #6366f1; font-weight: 600; margin-bottom: 12px; }
+        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; margin-bottom: 10px; }
+        .info { font-size: 13px; color: #475569; margin-top: 5px; }
+        .stipend { font-weight: bold; color: #16a34a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Internship Portal</h1>
+            <p>Live REST API SQLite Persistent Data</p>
+        </header>
+
+        <!-- Data Add Panra Form -->
+        <div class="form-box">
+            <h3>Add New Internship</h3>
+            <form id="addForm" onsubmit="addInternship(event)">
+                <input type="text" id="title" placeholder="Job Title (e.g. React Developer)" required>
+                <input type="text" id="company" placeholder="Company Name" required>
+                <input type="text" id="domain" placeholder="Domain (e.g. Web Development)" required>
+                <input type="text" id="location" placeholder="Location (e.g. Remote)" required>
+                <input type="text" id="stipend" placeholder="Stipend (e.g. ₹15,000 / month)" required>
+                <button type="submit">Store in Database</button>
+            </form>
+        </div>
+
+        <div id="cards-container" class="grid">Loading internships...</div>
+    </div>
+
+    <script>
+        async function fetchInternships() {
+            try {
+                const res = await fetch('/api/internships');
+                const result = await res.json();
+                const data = result.data || result;
+
+                const container = document.getElementById('cards-container');
+                container.innerHTML = '';
+
+                data.forEach(item => {
+                    container.innerHTML += `
+                        <div class="card">
+                            <div class="card-title">${item.title}</div>
+                            <div class="card-company">${item.company}</div>
+                            <span class="badge">${item.domain}</span>
+                            <div class="info">Location: <b>${item.location}</b></div>
+                            <div class="info">Stipend: <span class="stipend">${item.stipend}</span></div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                document.getElementById('cards-container').innerHTML = 'Error loading data from API.';
+            }
+        }
+
+        async function addInternship(e) {
+            e.preventDefault();
+            const newInternship = {
+                title: document.getElementById('title').value,
+                company: document.getElementById('company').value,
+                domain: document.getElementById('domain').value,
+                location: document.getElementById('location').value,
+                stipend: document.getElementById('stipend').value
+            };
+
+            const res = await fetch('/api/internships', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newInternship)
+            });
+
+            if (res.ok) {
+                document.getElementById('addForm').reset();
+                fetchInternships(); // Reload list automatically
+            } else {
+                alert('Error saving data');
+            }
+        }
+
+        fetchInternships();
+    </script>
+</body>
+</html>
